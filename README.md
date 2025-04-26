@@ -45,6 +45,42 @@ not attempt to break performance records.  If you need the fastest possible
 implementation, you might consider some other libraries, such as GNU MP (GMP),
 MIRACL, or the bignum library from OpenSSL.
 
+Building IMath
+-------------
+
+IMath uses CMake as its build system. To build the library, run:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+To run the tests:
+
+```bash
+cd build
+ctest --output-on-failure
+```
+
+To build with specific options:
+
+```bash
+cmake -DIMATH_BUILD_EXAMPLES=ON -DIMATH_ENABLE_TESTING=ON ..
+```
+
+Available CMake options:
+- `IMATH_BUILD_EXAMPLES` (default: ON) - Build example programs
+- `IMATH_USE_32BIT_WORDS` (default: OFF) - Use 32-bit words instead of 64-bit
+- `IMATH_ENABLE_TESTING` (default: ON) - Enable testing
+
+To install the library:
+
+```bash
+cmake --build . --target install
+```
+
 Programming with IMath
 ----------------------
 
@@ -109,3 +145,19 @@ The IMath API also supports operations on arbitrary precision rational numbers.
 The functions for creating and manipulating rational values (type `mpq_t`) are
 defined in `imrat.h`, so that you need only include them in your project if you
 wish to.
+
+Using IMath in Your Project
+---------------------------
+
+If you use CMake for your project, you can include IMath as a dependency:
+
+```cmake
+find_package(IMath REQUIRED)
+target_link_libraries(your_target PRIVATE IMath::imath)
+```
+
+If installing IMath to a non-standard location, you can specify the path:
+
+```bash
+cmake -DCMAKE_PREFIX_PATH=/path/to/imath/install ..
+```

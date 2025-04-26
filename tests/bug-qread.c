@@ -34,5 +34,5 @@ int main(int arch, char* argv[]) {
   }
   printf("REGRESSION: mp_rat_read_cstring inconsistent space handling: %s\n",
          errs ? "FAILED" : "OK");
-  return !errs;
+  return errs;
 }

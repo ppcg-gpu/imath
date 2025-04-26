@@ -6,9 +6,12 @@
 #
 FROM alpine:latest AS base
 
-RUN apk add --no-cache bash build-base gcc gmp-dev make python3
+RUN apk add --no-cache bash build-base gcc gmp-dev cmake python3
 
 FROM base AS test
 COPY . /imath
 WORKDIR /imath
-CMD make distclean examples check
+CMD mkdir -p build && cd build && \
+    cmake .. && \
+    cmake --build . && \
+    ctest --output-on-failure

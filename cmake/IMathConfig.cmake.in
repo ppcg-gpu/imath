@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/IMathTargets.cmake")
+
+set_and_check(IMATH_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check(IMATH_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
+
+check_required_components(IMath)

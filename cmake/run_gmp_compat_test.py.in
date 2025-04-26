@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""
+GMP Compatibility Test Runner for CTest integration
+
+This script runs the GMP compatibility tests and returns a zero exit code
+if all tests pass, non-zero if any tests fail.
+"""
+import os
+import sys
+import subprocess
+
+# Directory where the test is running
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def main():
+    """Run the GMP compatibility tests"""
+    # Ensure the library path is properly set
+    if sys.platform == 'darwin':
+        lib_path_var = 'DYLD_LIBRARY_PATH'
+    else:
+        lib_path_var = 'LD_LIBRARY_PATH'
+    
+    # Ensure the shared libraries can be found
+    if lib_path_var in os.environ:
+        os.environ[lib_path_var] = f"{TEST_DIR}:{os.environ[lib_path_var]}"
+    else:
+        os.environ[lib_path_var] = TEST_DIR
+    
+    # Run the test with the runtest.py script
+    try:
+        result = subprocess.run(
+            [sys.executable, os.path.join(TEST_DIR, 'runtest.py'), 'random.tests', '-p', '100'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            check=False
+        )
+        
+        # Print the output for CTest to capture
+        print(result.stdout)
+        
+        # Check if the test passed (look for failures)
+        if "Failures: 0" in result.stdout:
+            print("\nGMP compatibility tests PASSED")
+            return 0
+        else:
+            print("\nGMP compatibility tests FAILED")
+            return 1
+    
+    except Exception as e:
+        print(f"Error running GMP compatibility tests: {e}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

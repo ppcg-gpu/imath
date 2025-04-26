@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""
+Unit Test Script for IMath
+
+This script:
+1. Runs the imtest program with the specified test file
+2. Checks for test success/failure in the output
+3. Returns success (0) if all tests pass, failure (1) otherwise
+"""
+import subprocess
+import sys
+import re
+
+def run_unit_test(imtest_program, test_file):
+    """Run unit test and check for success/failure"""
+    try:
+        # Run the imtest program and capture its output
+        result = subprocess.run(
+            [imtest_program, test_file],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
+        
+        # Check for test success/failure in output
+        output = result.stdout + result.stderr
+        
+        # Check return code first
+        if result.returncode != 0:
+            print(f"ERROR: Test process exited with code {result.returncode}")
+            print(f"Output: {output}")
+            return 1
+        
+        # Check for explicit failure message
+        if re.search(r'\bFAILED\b', output):
+            print(f"ERROR: Test failed")
+            print(f"Output: {output}")
+            return 1
+            
+        # Check for success message
+        if re.search(r'\b0 failed\b', output):
+            print(f"Test passed: {test_file}")
+            return 0
+            
+        # If we get here, no definitive success/failure message was found
+        print(f"WARNING: Could not determine test result")
+        print(f"Output: {output}")
+        return 1
+        
+    except Exception as e:
+        print(f"ERROR: Test failed to run: {str(e)}")
+        return 1
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: run_unit_test.py <imtest_program> <test_file>")
+        sys.exit(1)
+    
+    sys.exit(run_unit_test(
+        imtest_program=sys.argv[1],
+        test_file=sys.argv[2]
+    ))

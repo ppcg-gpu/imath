@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+Pi Test Script for IMath
+
+This script:
+1. Runs the pi program with the specified parameters
+2. Compares the output with the reference file
+3. Returns success (0) if they match, failure (1) otherwise
+"""
+import subprocess
+import sys
+import os
+
+def run_pi_test(pi_program, digits, radix, reference_file):
+    """Run pi test and compare with reference"""
+    try:
+        # Run the pi program and capture its output
+        result = subprocess.run(
+            [pi_program, digits, radix],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=True
+        )
+        
+        # Remove newlines and carriage returns
+        computed_pi = result.stdout.replace('\n', '').replace('\r', '')
+        
+        # Read reference file
+        with open(reference_file, 'r') as f:
+            reference_pi = f.read().replace('\n', '').replace('\r', '')
+        
+        # Compare computed pi with reference
+        if computed_pi != reference_pi:
+            print(f"ERROR: Computed pi value doesn't match reference")
+            print(f"  Expected: {reference_pi[:30]}...")
+            print(f"  Got:      {computed_pi[:30]}...")
+            return 1
+        
+        print(f"Pi test passed ({digits} digits, base {radix})")
+        return 0
+    
+    except subprocess.CalledProcessError as e:
+        print(f"ERROR: Pi computation failed with error code: {e.returncode}")
+        print(f"  stderr: {e.stderr}")
+        return 1
+    except Exception as e:
+        print(f"ERROR: Test failed: {str(e)}")
+        return 1
+
+if __name__ == "__main__":
+    if len(sys.argv) != 5:
+        print("Usage: run_pi_test.py <pi_program> <digits> <radix> <reference_file>")
+        sys.exit(1)
+    
+    sys.exit(run_pi_test(
+        pi_program=sys.argv[1],
+        digits=sys.argv[2],
+        radix=sys.argv[3],
+        reference_file=sys.argv[4]
+    ))

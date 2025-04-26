@@ -100,8 +100,8 @@ def parse_args():
 
 if __name__ == "__main__":
     (options, tests) = parse_args()
-    gmp_test_so = ctypes.cdll.LoadLibrary("gmp_test.so")
-    imath_test_so = ctypes.cdll.LoadLibrary("imath_test.so")
+    gmp_test_so = ctypes.cdll.LoadLibrary("libgmp_test.so")
+    imath_test_so = ctypes.cdll.LoadLibrary("libimath_test.so")
 
     wrappers.verbose = options.verbose
     wrappers.fork = options.fork
