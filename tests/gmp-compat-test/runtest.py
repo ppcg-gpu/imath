@@ -3,7 +3,9 @@
 from __future__ import print_function
 
 import ctypes
+import os
 from optparse import OptionParser
+import sys
 
 import gmpapi
 import wrappers
@@ -98,10 +100,35 @@ def parse_args():
     return parser.parse_args()
 
 
+def load_library(lib_path):
+    """Platform-agnostic library loading function"""
+    if not os.path.exists(lib_path):
+        raise RuntimeError(f"Library not found: {lib_path}")
+    
+    try:
+        return ctypes.cdll.LoadLibrary(lib_path)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load library {lib_path}: {e}")
+
+
 if __name__ == "__main__":
     (options, tests) = parse_args()
-    gmp_test_so = ctypes.cdll.LoadLibrary("libgmp_test.so")
-    imath_test_so = ctypes.cdll.LoadLibrary("libimath_test.so")
+    
+    # Get library paths from environment variables - these are set by run_gmp_compat_test.py
+    gmp_lib_path = os.environ.get('GMP_TEST_LIB')
+    imath_lib_path = os.environ.get('IMATH_TEST_LIB')
+    
+    if not gmp_lib_path or not imath_lib_path:
+        print("ERROR: Library paths not provided in environment variables")
+        print("Make sure GMP_TEST_LIB and IMATH_TEST_LIB are set")
+        sys.exit(1)
+    
+    try:
+        gmp_test_so = load_library(gmp_lib_path)
+        imath_test_so = load_library(imath_lib_path)
+    except RuntimeError as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
 
     wrappers.verbose = options.verbose
     wrappers.fork = options.fork

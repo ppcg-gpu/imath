@@ -112,7 +112,7 @@ add_test(
 
 # Set environment variables for the test
 set_tests_properties(gmp_compat_test PROPERTIES
-    ENVIRONMENT "LD_LIBRARY_PATH=${GMP_COMPAT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:$ENV{LD_LIBRARY_PATH};DYLD_LIBRARY_PATH=${GMP_COMPAT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:$ENV{DYLD_LIBRARY_PATH}"
+    ENVIRONMENT "GMP_TEST_LIB=$<TARGET_FILE:gmp_test_lib>;IMATH_TEST_LIB=$<TARGET_FILE:imath_test_lib>"
 )
 
 # Create a custom target that runs the test
