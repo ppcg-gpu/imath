@@ -426,7 +426,6 @@ unsigned long GMPZAPI(get_ui)(mp_int op) {
 
   /* Abort the try if we don't have a range error in the conversion.
    * The range error indicates that the value cannot fit into a long. */
-  CHECK(res == MP_RANGE ? MP_OK : MP_RANGE);
   if (res != MP_RANGE) return 0;
 
   return get_long_bits(op);
@@ -444,7 +443,6 @@ long GMPZAPI(get_si)(mp_int op) {
 
   /* Abort the try if we don't have a range error in the conversion.
    * The range error indicates that the value cannot fit into a long. */
-  CHECK(res == MP_RANGE ? MP_OK : MP_RANGE);
   if (res != MP_RANGE) return 0;
 
   /* get least significant bits into an unsigned long */
@@ -692,6 +690,9 @@ void *GMPZAPI(export)(void *rop, size_t *countp, int order, size_t size,
    */
   num_missing_bytes = (size * num_words) - num_used_bytes;
   assert(num_missing_bytes < size);
+  
+  /* Suppress unused variable warning in Release mode */
+  (void)num_missing_bytes;
 
   /* Allocate space for the result if needed */
   if (rop == NULL) {
@@ -809,7 +810,7 @@ size_t GMPZAPI(sizeinbase)(mp_int op, int base) {
 
   /* Compute string length in base */
   res = mp_int_string_len(op, base);
-  CHECK((res > 0) == MP_OK);
+  if (res <= 0) return 0; /* Error case */
 
   /* Now adjust the final size by getting rid of string artifacts */
   size = res;

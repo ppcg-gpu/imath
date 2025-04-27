@@ -1974,7 +1974,10 @@ static int s_ksqr(mp_digit *da, mp_digit *dc, mp_size size_a) {
   if (multiply_threshold && size_a > multiply_threshold) {
     mp_size bot_size = (size_a + 1) / 2;
     mp_digit *a_top = da + bot_size;
-    mp_digit *t1, *t2, *t3, carry;
+    mp_digit *t1, *t2, *t3;
+#ifndef NDEBUG
+    mp_digit carry;
+#endif
     mp_size at_size = size_a - bot_size;
     mp_size buf_size = 2 * bot_size;
 
@@ -2004,10 +2007,14 @@ static int s_ksqr(mp_digit *da, mp_digit *dc, mp_size size_a) {
 
     /* Assemble the output value */
     COPY(t1, dc, 2 * bot_size);
-    carry = s_uadd(t3, dc + bot_size, dc + bot_size, buf_size + 1, buf_size);
+#ifndef NDEBUG
+    carry = 
+#endif
+        s_uadd(t3, dc + bot_size, dc + bot_size, buf_size + 1, buf_size);
     assert(carry == 0);
-
+#ifndef NDEBUG
     carry =
+#endif
         s_uadd(t2, dc + 2 * bot_size, dc + 2 * bot_size, buf_size, buf_size);
     assert(carry == 0);
 

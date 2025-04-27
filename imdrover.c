@@ -415,13 +415,16 @@ void init_testing(void) {
   if (is_done) return;
 
   for (int i = 0; i < NUM_REGS; ++i) {
-    assert(mp_int_init(g_zreg + i) == MP_OK);
-    assert(mp_rat_init(g_qreg + i) == MP_OK);
+    int status = mp_int_init(g_zreg + i);
+    assert(status == MP_OK);
+    status = mp_rat_init(g_qreg + i);
+    assert(status == MP_OK);
+    (void)status;
   }
 
   imath_errmsg = g_output;
 
-  assert(atexit(done_testing) == 0);
+  atexit(done_testing);
   is_done = 1;
 }
 
