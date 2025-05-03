@@ -4,8 +4,7 @@
 # It replaces the custom Makefile in tests/gmp-compat-test
 
 # Find GMP package (required for compatibility tests)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GMP REQUIRED gmp)
+find_package(GMP REQUIRED)
 
 # Find Python interpreter (required for test generation scripts)
 find_package(Python REQUIRED COMPONENTS Interpreter)
@@ -72,8 +71,7 @@ set_target_properties(gmp_test_lib PROPERTIES
     OUTPUT_NAME gmp_test
     LIBRARY_OUTPUT_DIRECTORY ${GMP_COMPAT_BINARY_DIR}
 )
-target_include_directories(gmp_test_lib PRIVATE ${GMP_INCLUDE_DIRS})
-target_link_libraries(gmp_test_lib ${GMP_LIBRARIES})
+target_link_libraries(gmp_test_lib GMP::gmp)
 
 add_library(imath_test_lib SHARED ${GMP_COMPAT_BINARY_DIR}/imath_test.c)
 set_target_properties(imath_test_lib PROPERTIES

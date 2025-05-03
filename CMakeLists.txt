@@ -6,6 +6,8 @@ option(IMATH_BUILD_EXAMPLES "Build example programs" ON)
 option(IMATH_USE_32BIT_WORDS "Use 32-bit words instead of 64-bit" OFF)
 option(IMATH_ENABLE_TESTING "Enable testing" ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
