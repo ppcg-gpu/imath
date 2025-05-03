@@ -1,4 +1,4 @@
-name: Unit tests
+name: CI
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
@@ -20,24 +20,26 @@ jobs:
         compiler: ['gcc', 'clang']
         exclude:
           - os: macos-latest
-            compiler: gcc  # gcc is clang on macOS
+            compiler: gcc
 
     runs-on: ${{ matrix.os }}
 
     env:
-        CC: ${{ matrix.compiler }}
+      CC: ${{ matrix.compiler }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Log compiler version
-      run: |
-        "$CC" --version
-    - name: make test    # unit tests
-      run: make test
-    # TODO(creachadair): As of 25-Jan-2024, the GMP compatibility tests
-    # on gcc no longer work correctly when run in containers either
-    # locally or in github actions. They work fine from the CLI, but
-    # for now turn them off in CI.
-    - name: make check   # unit and compatibility tests
-      if: matrix.compiler != 'gcc'  # `make check` is failing on gcc
-      run: make check
+      - uses: actions/checkout@v4
+      - name: Log compiler version
+        run: |
+          "$CC" --version
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+      - name: Set up Ninja (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: ashutoshvarma/setup-ninja@master
+      - name: Configure CMake
+        run: cmake -S . -B build -G Ninja -DIMATH_ENABLE_TESTING=ON
+      - name: Build
+        run: cmake --build build
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
