@@ -56,6 +56,7 @@ target_link_libraries(bug-swap PRIVATE imath)
 add_executable(bug-qread tests/bug-qread.c)
 target_link_libraries(bug-qread PRIVATE imath imrat)
 
+# The pi example is always built, because it is used in CTest
 add_executable(pi examples/pi.c)
 target_link_libraries(pi PRIVATE imath)
 
@@ -166,7 +167,6 @@ if(IMATH_BUILD_EXAMPLES)
         findprime
         imcalc
         input
-        pi
         randprime
         rounding
         rsakey
