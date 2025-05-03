@@ -42,7 +42,7 @@ jobs:
         if: runner.os != 'Windows' && matrix.os != 'ubuntu-24.04-arm'
         uses: ashutoshvarma/setup-ninja@master
       - name: Configure CMake
-        run: cmake -S . -B build -G Ninja -DIMATH_ENABLE_TESTING=ON
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DIMATH_ENABLE_TESTING=ON
       - name: Build
         run: cmake --build build
       - name: Run tests
