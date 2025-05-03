@@ -32,10 +32,14 @@ jobs:
       - name: Log compiler version
         run: |
           "$CC" --version
-      - name: Set up CMake
+      - name: Install CMake and Ninja (ARM only)
+        if: matrix.os == 'ubuntu-24.04-arm'
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+      - name: Set up CMake (non-ARM)
+        if: matrix.os != 'ubuntu-24.04-arm'
         uses: jwlawson/actions-setup-cmake@v1
-      - name: Set up Ninja (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Set up Ninja (non-ARM Linux/macOS)
+        if: runner.os != 'Windows' && matrix.os != 'ubuntu-24.04-arm'
         uses: ashutoshvarma/setup-ninja@master
       - name: Configure CMake
         run: cmake -S . -B build -G Ninja -DIMATH_ENABLE_TESTING=ON
