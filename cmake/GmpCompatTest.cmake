@@ -79,7 +79,7 @@ set_target_properties(imath_test_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${GMP_COMPAT_BINARY_DIR}
 )
 target_include_directories(imath_test_lib PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(imath_test_lib libimath)
+target_link_libraries(imath_test_lib imath)
 
 # Create target that depends on all generated files
 add_custom_target(gmp_compat_test_files

@@ -8,8 +8,7 @@ option(IMATH_ENABLE_TESTING "Enable testing" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include(GNUInstallDirs)
 
 # Global compiler flags
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
@@ -28,26 +27,20 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_definitions(DEBUG=1)
 endif()
 
-# Core libraries
-add_library(imath STATIC imath.c)
-add_library(imrat STATIC imrat.c)
-add_library(iprime STATIC iprime.c)
-add_library(gmp_compat STATIC gmp_compat.c)
-target_link_libraries(imrat PUBLIC imath)
-target_link_libraries(iprime PUBLIC imath)
-target_link_libraries(gmp_compat PUBLIC imath)
-
 # Shared library
-add_library(libimath SHARED imath.c imrat.c iprime.c gmp_compat.c)
-set_target_properties(libimath PROPERTIES 
-    OUTPUT_NAME imath
+add_library(imath SHARED imath.c imrat.c iprime.c rsamath.c gmp_compat.c)
+target_include_directories(imath PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+set_target_properties(imath PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
 # Test executables
 add_executable(imtest imtest.c imdrover.c)
-target_link_libraries(imtest PRIVATE imath imrat iprime)
+target_link_libraries(imtest PRIVATE imath)
 
 add_executable(imtimer imtimer.c)
 target_link_libraries(imtimer PRIVATE imath)
@@ -56,68 +49,64 @@ add_executable(bug-swap tests/bug-swap.c)
 target_link_libraries(bug-swap PRIVATE imath)
 
 add_executable(bug-qread tests/bug-qread.c)
-target_link_libraries(bug-qread PRIVATE imath imrat)
+target_link_libraries(bug-qread PRIVATE imath)
 
 # The pi example is always built, because it is used in CTest
 add_executable(pi examples/pi.c)
 target_link_libraries(pi PRIVATE imath)
 
-# Add rsamath support
-add_library(rsamath STATIC rsamath.c)
-target_link_libraries(rsamath PUBLIC imath)
-
 add_executable(rtest tests/rtest.c)
-target_link_libraries(rtest PRIVATE imath rsamath)
+target_link_libraries(rtest PRIVATE imath)
 
 # Enable testing
 if(IMATH_ENABLE_TESTING)
     include(CTest)
-   
+
     # Create tests directory in build dir
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
     # Copy GMP compatibility test scripts to tests/gmp-compat-test directory
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/gmp-compat)
-    
-    file(GLOB GMP_COMPAT_PY_SCRIPTS 
+
+    file(GLOB GMP_COMPAT_PY_SCRIPTS
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/gmp-compat-test/genctest.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/gmp-compat-test/genpytest.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/gmp-compat-test/gendata.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/gmp-compat-test/gmpapi.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/gmp-compat-test/runtest.py"
     )
-    
+
     foreach(SCRIPT ${GMP_COMPAT_PY_SCRIPTS})
         get_filename_component(SCRIPT_NAME ${SCRIPT} NAME)
 	configure_file(${SCRIPT} ${CMAKE_CURRENT_BINARY_DIR}/tests/gmp-compat-test/${SCRIPT_NAME} COPYONLY)
     endforeach()
-    
+
     # Find Python interpreter - required for tests
     find_package(Python REQUIRED COMPONENTS Interpreter)
-    
+
     # Copy test data files to the build directory
     file(GLOB TEST_TC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.tc")
     file(GLOB TEST_PI_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/pi*.txt")
-    
+
     # Copy test files
     foreach(TEST_FILE ${TEST_TC_FILES} ${TEST_PI_FILES})
         get_filename_component(FILE_NAME ${TEST_FILE} NAME)
         configure_file(${TEST_FILE} ${CMAKE_CURRENT_BINARY_DIR}/tests/${FILE_NAME} COPYONLY)
     endforeach()
-    
+
     # Create the Python test scripts
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_pi_test.py.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/run_pi_test.py
         @ONLY
     )
-    
+
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_unit_test.py.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/run_unit_test.py
         @ONLY
     )
-    
+
     # Add individual tests for each .tc file
     foreach(TEST_FILE ${TEST_TC_FILES})
         get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
@@ -128,13 +117,13 @@ if(IMATH_ENABLE_TESTING)
                     ${CMAKE_CURRENT_BINARY_DIR}/tests/${TEST_NAME}.tc
         )
     endforeach()
-    
+
     # Add pi computation tests - implemented using Python
     foreach(PI_TEST_CONFIG "1024;10;pi1024.txt" "1698;16;pi1698-16.txt" "1500;10;pi1500-10.txt" "4096;10;pi4096-10.txt")
         list(GET PI_TEST_CONFIG 0 DIGITS)
         list(GET PI_TEST_CONFIG 1 RADIX)
         list(GET PI_TEST_CONFIG 2 REFERENCE_FILE)
-        
+
         add_test(
             NAME pi_test_${DIGITS}_${RADIX}
             COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/tests/run_pi_test.py
@@ -144,7 +133,7 @@ if(IMATH_ENABLE_TESTING)
                     ${CMAKE_CURRENT_BINARY_DIR}/tests/${REFERENCE_FILE}
         )
     endforeach()
-    
+
     # Add bug regression tests
     add_test(NAME bug_swap_test COMMAND bug-swap)
     add_test(NAME bug_qread_test COMMAND bug-qread)
@@ -152,9 +141,9 @@ if(IMATH_ENABLE_TESTING)
     # GMP compatibility tests
     # Include the GmpCompatTest module
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/GmpCompatTest.cmake)
-    
+
     # Create combined check target that includes all tests
-    add_custom_target(check 
+    add_custom_target(check
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
         COMMENT "Running all tests"
         DEPENDS imtest pi bug-swap bug-qread gmp_test_lib imath_test_lib
@@ -173,12 +162,12 @@ if(IMATH_BUILD_EXAMPLES)
         rounding
         rsakey
     )
-    
+
     # Build each example
     foreach(EXAMPLE ${EXAMPLES})
         add_executable(example_${EXAMPLE} examples/${EXAMPLE}.c)
         set_target_properties(example_${EXAMPLE} PROPERTIES OUTPUT_NAME ${EXAMPLE})
-        target_link_libraries(example_${EXAMPLE} PRIVATE imath imrat iprime)
+        target_link_libraries(example_${EXAMPLE} PRIVATE imath)
     endforeach()
 endif()
 
@@ -187,7 +176,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANG_FORMAT clang-format)
     if(CLANG_FORMAT)
         add_custom_target(format-c
-            COMMAND find . -type f -name '*.h' -o -name '*.c' -print0 | 
+            COMMAND find . -type f -name '*.h' -o -name '*.c' -print0 |
                     xargs -0 ${CLANG_FORMAT} --style=Google -i
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMENT "Formatting C source files and headers with clang-format..."
@@ -198,7 +187,7 @@ endif()
 find_program(YAPF yapf)
 if(YAPF)
     add_custom_target(format-py
-        COMMAND find . -type f -name '*.py' -print0 | 
+        COMMAND find . -type f -name '*.py' -print0 |
                 xargs -0 ${YAPF} --style=pep8 -i
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Formatting Python source files with yapf..."
@@ -223,8 +212,8 @@ add_custom_target(docker-test
 
 # Documentation generation
 add_custom_target(doc.md
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkdoc.py 
-            ${CMAKE_CURRENT_SOURCE_DIR}/doc.md.in 
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkdoc.py
+            ${CMAKE_CURRENT_SOURCE_DIR}/doc.md.in
 	    ${CMAKE_CURRENT_BINARY_DIR}/doc.md
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/doc.md.in
             ${CMAKE_CURRENT_SOURCE_DIR}/imath.h
@@ -234,8 +223,7 @@ add_custom_target(doc.md
 )
 
 # Installation
-include(GNUInstallDirs)
-install(TARGETS imath imrat iprime gmp_compat libimath
+install(TARGETS imath
     EXPORT IMathTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
